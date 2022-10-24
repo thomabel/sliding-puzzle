@@ -1,4 +1,4 @@
-use std::{collections::HashMap, cmp::Reverse};
+use std::{collections::HashMap, cmp::Reverse, path};
 use priority_queue::PriorityQueue;
 use crate::puzzle::*;
 use slab_tree::*;
@@ -88,8 +88,7 @@ impl Agent {
             // Iterate through all action types.
             for action in [ActionType::Up, ActionType::Down, ActionType::Left, ActionType::Right].iter() {
                 let state = parent.state.act(*action);
-                let priority = get_heuristic(&state, &self.goal, heuristic);
-                let path_cost = parent.path_cost + priority;
+                let path_cost = parent.path_cost + get_heuristic(&state, &self.goal, heuristic) + 1;
                 let child = Node::new(state, *action, path_cost);
                     //child.state.print("child");
 
@@ -97,8 +96,7 @@ impl Agent {
                 if !self.explored.contains_key(&child.state) 
                 || !self.frontier_hash.contains_key(&child.state) {
                     // Insert the child node into the frontier since it's not there yet.
-                    //println!("^ Does not exist priority: {} ^ \n", priority);
-                    self.insert_frontier(parent_id, child, priority);
+                    self.insert_frontier(parent_id, child);
                 }
                 // If child's state is in the frontier with a higher path cost then replace it.
                 else if self.frontier_hash.contains_key(&child.state) {
@@ -107,8 +105,7 @@ impl Agent {
 
                     if child.path_cost < path_cost_existing {
                         self.remove_frontier(id, &child.state);
-                        //println!("Better rate ^priority: {}\n", priority);
-                        self.insert_frontier(parent_id, child, priority);
+                        self.insert_frontier(parent_id, child);
                     }
                 }
             }
@@ -116,7 +113,7 @@ impl Agent {
         None
     }
 
-    fn insert_frontier(&mut self, parent: NodeId, child: Node, priority: u32) {
+    fn insert_frontier(&mut self, parent: NodeId, child: Node) {
         let mut p_node = match self.tree.get_mut(parent) {
             None => return,
             Some(t) => t
@@ -124,7 +121,7 @@ impl Agent {
         let mut c_node = p_node.append(child);
                     
         let id = c_node.node_id();
-        self.frontier.push(id, Reverse(priority));
+        self.frontier.push(id, Reverse(c_node.data().path_cost));
         self.frontier_hash.insert(c_node.data().state.clone(), id);
     }
 

@@ -39,14 +39,15 @@ fn main() {
         0, 2, 6, 
         7, 5, 8]);
     
+    //let puzzle = &puzzle_trivial;
     let puzzle = &puzzle_random;
     
     goal.print("Goal");
     puzzle.print("Puzzle");
     
     let heuristic = Heuristic::OrthoDistance;
-    let loop_count = u32::pow(2, 16);
-    let count = false;
+    let loop_count = u32::max_value(); // u32::pow(2, 16);
+    let count = true;
 
     let mut agent = Agent::new((*puzzle).clone(), goal, heuristic);
     let solution = agent.uniform_cost_search(heuristic, loop_count, count);

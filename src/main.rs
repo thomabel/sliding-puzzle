@@ -6,6 +6,7 @@
 */
 mod puzzle;
 mod agent;
+mod test;
 
 use puzzle::*;
 use agent::*;
@@ -21,15 +22,34 @@ fn main() {
     */
     
     let dimension = Vector2::new(3, 3);
-    let puzzle = Puzzle::new(dimension);
-    //let puzzle = Puzzle::new_from_vec(dimension, vec![4, 5, 0, 6, 1, 8, 7, 3, 2]);
-    let goal = Puzzle::new_from_vec(dimension, vec![1, 2, 3, 5, 5, 6, 7, 8, 0]);
+    let goal = Puzzle::new_from_vec(dimension, vec![
+        1, 2, 3, 
+        4, 5, 6, 
+        7, 8, 0]);
+
+    let puzzle_random = Puzzle::new(dimension);
+
+    let puzzle_hw = Puzzle::new_from_vec(dimension, vec![
+        4, 5, 0, 
+        6, 1, 8, 
+        7, 3, 2]);
+    
+    let puzzle_trivial = Puzzle::new_from_vec(dimension, vec![
+        4, 1, 3, 
+        0, 2, 6, 
+        7, 5, 8]);
+    
+    let puzzle = &puzzle_random;
     
     goal.print("Goal");
     puzzle.print("Puzzle");
     
-    let mut agent = Agent::new(puzzle, goal);
-    let solution = agent.uniform_cost_search();
+    let heuristic = Heuristic::OrthoDistance;
+    let loop_count = u32::pow(2, 16);
+    let count = false;
+
+    let mut agent = Agent::new((*puzzle).clone(), goal, heuristic);
+    let solution = agent.uniform_cost_search(heuristic, loop_count, count);
     match solution {
         None => println!("No Solution found."),
         Some(t) => t.print(),

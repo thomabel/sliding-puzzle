@@ -1,16 +1,13 @@
 use ndarray::prelude::*;
 use ndarray_rand::{rand::{seq::SliceRandom, thread_rng}};
 
-#[derive(Clone, Copy, PartialEq, Hash)]
+#[derive(Clone, Copy, PartialEq, Hash, Debug)]
 pub struct Vector2 {
     x: i32, y: i32
 }
 impl Vector2 {
     pub fn new(x: i32, y: i32) -> Vector2 {
         Vector2 { x, y }
-    }
-    pub fn zero() -> Vector2 {
-        Vector2 { x: 0, y: 0 }
     }
     pub fn dim(&self) -> ndarray::Dim<[usize; 2]> {
         ndarray::Dim((self.x as usize, self.y as usize))
@@ -25,7 +22,7 @@ pub enum ActionType {
     None, Up, Down, Left, Right
 }
 
-#[derive(Clone, PartialEq, Hash)]
+#[derive(Clone, PartialEq, Hash, Debug)]
 pub struct Puzzle {
     map: Array2<u8>,  // Starting state, for reference.
     blank: Vector2,     // Location of the blank spot.
@@ -144,7 +141,7 @@ impl Puzzle {
     pub fn heuristic_misplaced(&self, goal: &Puzzle) -> u8 {
         let mut count = 0;
         for spot in self.map.iter().zip(goal.map.iter()) {
-            if spot.0 != spot.1 {
+            if *spot.0 != *spot.1 && *spot.0 != 0 {
                 count += 1;
             }
         }
@@ -155,9 +152,11 @@ impl Puzzle {
         let mut count = 0;
         for (i, row) in self.map.rows().into_iter().enumerate() {
             for (j, col) in row.into_iter().enumerate() {
-                let position = Vector2::new(i as i32, j as i32);
-                let other = find_value(&goal.map, *col).unwrap();
-                count += position.distance_ortho(&other);
+                if *col != 0 {
+                    let position = Vector2::new(i as i32, j as i32);
+                    let other = find_value(&goal.map, *col).unwrap();
+                    count += position.distance_ortho(&other);
+                } 
             }
         }
         count

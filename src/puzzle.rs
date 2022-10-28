@@ -26,7 +26,7 @@ impl Puzzle {
 
         Puzzle { map, blank, dimension }
     } 
-    pub fn new_from_vec(dimension: Vector2, vec: Vec<u8>) -> Puzzle {
+    pub fn from_vec(dimension: Vector2, vec: Vec<u8>) -> Puzzle {
         let shape = dimension.dim();
         let map = Array2::<u8>::from_shape_vec(shape, vec).unwrap();
         let blank = find_value(&map, 0).unwrap();
@@ -122,6 +122,28 @@ impl Puzzle {
         count
     }
 
+    /// Uses inversions to test if this puzzle is solvable.
+    pub fn test_solvable(&self) -> bool {
+        // vec: Vec<u8>
+        let vec = self.map.clone().into_raw_vec();
+        let len = vec.len();
+
+        let mut counter = 0;
+        for i in 0..len {
+            if vec[i] == 0 {
+                continue;
+            }
+            let k = i + 1;
+            for j in k..len {
+                if vec[j] != 0 && 
+                    vec[i] > vec[j] {
+                    counter += 1;
+                }
+            }
+        }
+
+        counter % 2 == 0
+    }
 }
 
 impl ToString for Puzzle {
@@ -173,4 +195,3 @@ fn find_value(map: &Array2<u8>, value: u8) -> Option<Vector2> {
     }
     None
 }
-

@@ -251,6 +251,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "chronometer"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c34bdef54316ab31c471378892675d1c7586f32b9209f20f36333665bc1b859"
+
+[[package]]
 name = "cmake"
 version = "0.1.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1495,6 +1501,7 @@ name = "sliding-puzzle"
 version = "0.1.0"
 dependencies = [
  "bracket-lib",
+ "chronometer",
  "ndarray",
  "ndarray-rand",
  "priority-queue",

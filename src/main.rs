@@ -6,10 +6,12 @@
 */
 mod puzzle;
 mod agent;
+mod vector;
 mod test;
 
 use puzzle::*;
 use agent::*;
+use vector::Vector2;
 
 fn main() {
     // Welcome message.
@@ -40,7 +42,8 @@ fn main() {
         7, 5, 8]);
     
     //let puzzle = &puzzle_trivial;
-    let puzzle = &puzzle_random;
+    //let puzzle = &puzzle_random;
+    let puzzle = &puzzle_hw;
     
     goal.print("Goal");
     puzzle.print("Puzzle");

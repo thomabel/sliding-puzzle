@@ -1,4 +1,4 @@
-use std::{collections::HashMap, cmp::Reverse, path};
+use std::{collections::HashMap, cmp::Reverse};
 use priority_queue::PriorityQueue;
 use crate::puzzle::*;
 use slab_tree::*;
@@ -23,7 +23,7 @@ impl Solution {
     pub fn print(&self) {
         println!("Solution: ");
         for puzzle in &self.state_path {
-            println!("{}", puzzle.read_map());
+            println!("{}", puzzle.to_string());
         }
         println!("Steps: {}", self.steps);
     }
@@ -77,7 +77,7 @@ impl Agent {
             //parent.state.print("parent");
                 
             // If the goal state has been reached then return the solution.
-            if parent.state.goal_test(&self.goal) {
+            if parent.state == self.goal {
                 return self.solution(parent_id);
             }
                 

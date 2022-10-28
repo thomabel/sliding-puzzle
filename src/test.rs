@@ -1,15 +1,15 @@
 use std::cmp::Reverse;
 use priority_queue::PriorityQueue;
 use slab_tree::{NodeId, TreeBuilder};
-use crate::{puzzle::*, agent::Node};
+use crate::{puzzle::*, agent::Node, vector::Vector2};
+
 
 #[test]
 fn goal() {
     let dimension = Vector2::new(3, 3);
     let goal = Puzzle::new_from_vec(dimension, vec![1, 2, 3, 4, 5, 6, 7, 8, 0]);
     let puzzle = Puzzle::new_from_vec(dimension, vec![4, 5, 0, 6, 1, 8, 7, 3, 2]);
-    assert!(goal.goal_test(&goal));
-    assert!(!goal.goal_test(&puzzle));
+    assert_ne!(goal, puzzle);
 }
 
 #[test]
@@ -36,7 +36,6 @@ fn act() {
         4, 5, 0, 
         7, 8, 6]);
     let act = goal.act(ActionType::Up);
-    assert!(act.goal_test(&new));
     assert_eq!(act, new);
 
     let new2 = Puzzle::new_from_vec(dimension, vec![
@@ -44,7 +43,6 @@ fn act() {
         4, 0, 5, 
         7, 8, 6]);
     let act2 = act.act(ActionType::Left);
-    assert!(new2.goal_test(&act2));
     assert_eq!(new2, act2);
 
 }

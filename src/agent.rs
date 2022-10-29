@@ -17,8 +17,8 @@ impl Path {
 }
 
 pub struct Solution {
-    state_path: Vec<Puzzle>,
-    steps: u32,
+    pub state_path: Vec<Puzzle>,
+    pub steps: u32,
 }
 impl Solution {
     pub fn print(&self) {
@@ -26,7 +26,21 @@ impl Solution {
         for puzzle in &self.state_path {
             println!("{}", puzzle.to_string());
         }
-        println!("Steps: {}", self.steps);
+        println!("Steps: {}\n", self.steps);
+    }
+}
+
+#[derive(Clone, Copy)]
+pub enum SearchStrategy {
+    BestFirst,
+    AStar,
+}
+impl ToString for SearchStrategy {
+    fn to_string(&self) -> String {
+        match self {
+            SearchStrategy::BestFirst => "Best First",
+            SearchStrategy::AStar => "AStar",
+        }.to_string()
     }
 }
 
@@ -34,6 +48,16 @@ impl Solution {
 pub enum Heuristic {
     Misplaced,
     OrthoDistance,
+    Inversions,
+}
+impl ToString for Heuristic {
+    fn to_string(&self) -> String {
+        match self {
+            Heuristic::Misplaced => "Misplaced",
+            Heuristic::OrthoDistance => "Orthogonal Distance",
+            Heuristic::Inversions => "Inversions",
+        }.to_string()
+    }
 }
 
 pub struct Agent {
@@ -62,30 +86,30 @@ impl Agent {
         Agent { tree, frontier_prique: frontier, frontier_hmap: frontier_hash, explored_hmap: explored, goal }
     }
 
-    pub fn uniform_cost_search(&mut self, heuristic: Heuristic, loop_count: u32, count: bool) -> Option<Solution> {
+    pub fn uniform_cost_search(&mut self, search_strategy: SearchStrategy, heuristic: Heuristic, loop_count: u32) -> Option<Solution> {
         let mut watch = Chronometer::new();
-        watch.start();
-        
         let mut counter = loop_count;
-        while counter > 0 {
-            if count { counter -= 1; }
-            
-            // Timer
-            println!("{:6} {:.6} s", counter, watch.duration().unwrap().as_secs_f32());
-            //println!("{}" counter);
+        
+        watch.start();
+        self.tree.root().unwrap().data().state.print("Initial");
 
+        while counter > 0 {
+            counter -= 1;
             // Check if the frontier is empty.
             // Returns no solution if true, the cheapest path cost node if false.
             let parent_id = match self.frontier_prique.pop() {
                     Some(t) => t.0,
-                    None => return None,
+                    None => {
+                        timer(counter, loop_count, &watch);
+                        return None
+                    },
             };
             let parent = self.tree.get(parent_id)?.data().clone();
             self.frontier_hmap.remove(&parent.state);
-            //parent.state.print("parent");
                 
             // If the goal state has been reached then return the solution.
             if parent.state == self.goal {
+                timer(counter, loop_count, &watch);
                 return self.solution(parent_id);
             }
                 
@@ -93,16 +117,23 @@ impl Agent {
             self.explored_hmap.insert(parent.state.clone(), parent_id);
                 
             
-            // Iterate through all action types.
+            // Iterate through all action types to add to the frontier.
             for action in [ActionType::Up, ActionType::Down, ActionType::Left, ActionType::Right].iter() {
+                // First, create a new child node.
                 let state = parent.state.act(*action);
-                let path_cost = parent.path_cost + get_heuristic(&state, &self.goal, heuristic) + 1;
+                let h = get_heuristic(&state, &self.goal, heuristic);
+                let g = 1;
+                let path_cost = parent.path_cost + 
+                    match search_strategy {
+                        SearchStrategy::BestFirst => h,
+                        SearchStrategy::AStar => h + g,
+                    };
                 let child = Path::new(state, *action, path_cost);
-                //child.state.print("child");
 
                 // Search to see if new child's state is already in the frontier or explored.
                 let child_in_frontier = self.frontier_hmap.contains_key(&child.state);
                 let child_in_explored = self.explored_hmap.contains_key(&child.state);
+
                 if !child_in_explored || !child_in_frontier {
                     // Insert the child node into the frontier since it's not there yet.
                     self.frontier_insert(parent_id, child);
@@ -161,5 +192,10 @@ fn get_heuristic(state: &Puzzle, goal: &Puzzle, heuristic: Heuristic) -> u32 {
     match heuristic {
         Heuristic::Misplaced => state.heuristic_misplaced(goal) as u32,
         Heuristic::OrthoDistance => state.heuristic_distances(goal),
+        Heuristic::Inversions => state.inversions(),
     }
+}
+
+fn timer(counter: u32, loop_count: u32, watch: &Chronometer) {
+    println!("{:6} {:.6} s", loop_count - counter, watch.duration().unwrap().as_secs_f32());
 }

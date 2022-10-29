@@ -122,9 +122,8 @@ impl Puzzle {
         count
     }
 
-    /// Uses inversions to test if this puzzle is solvable.
-    pub fn test_solvable(&self) -> bool {
-        // vec: Vec<u8>
+    /// Finds the number of inversions in the puzzle layout.
+    pub fn inversions(&self) -> u32 {
         let vec = self.map.clone().into_raw_vec();
         let len = vec.len();
 
@@ -141,8 +140,12 @@ impl Puzzle {
                 }
             }
         }
+        counter
+    }
 
-        counter % 2 == 0
+    /// Uses inversions to test if this puzzle is solvable.
+    pub fn test_solvable(&self) -> bool {
+        self.inversions() % 2 == 0
     }
 }
 

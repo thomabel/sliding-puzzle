@@ -22,19 +22,68 @@ fn experiment() {
 
     let dimension = Vector2::new(3, 3);
     let puzzle = puzzles(dimension);
-    let heuristic = Heuristic::OrthoDistance;
+    let mut solutions = Vec::new();
     let loop_count = 1_000_000;
-    let count = true;
 
-    let mut agent = Agent::new(puzzle[3].clone(), puzzle[0].clone());
-    let solution = agent.uniform_cost_search(heuristic, loop_count, count);
-    println!();
-    match solution {
-        None => println!("No Solution found."),
-        Some(t) => t.print(),
+    // Run a trial for each strategy and heuristic combination.
+    for search_strategy in [SearchStrategy::BestFirst, SearchStrategy::AStar] {
+        for heuristic in [Heuristic::Misplaced, Heuristic::OrthoDistance, Heuristic::Inversions] {
+            // Run the trial 5 times using the same set of 5 initial states.
+            for i in 0..5 {
+                let mut agent = Agent::new(puzzle[3 + i].clone(), puzzle[0].clone());
+                let label = format!("{} + {}", search_strategy.to_string(), heuristic.to_string());
+                match agent.uniform_cost_search(search_strategy, heuristic, loop_count) {
+                    None => {
+                        solutions.push((label, Err("\nNo Solution found.")));
+                    },
+                    Some(sol) => {
+                        solutions.push((label, Ok(sol)));
+                    },
+                }
+
+            }
+        }
     }
 
+    analyze_solutions(solutions, 6, 5);
+
     println!("\n<----------  Ending the session.  ---------->\n");
+}
+
+fn analyze_solutions(solutions: Vec<(String, Result<Solution, &str>)>, categories: usize, trials: usize) {
+    for i in 0..categories as usize {
+        // Track average steps for each category.
+        let mut steps = 0;
+        let mut count = 0;
+        let mut least_steps = u32::max_value();
+        let mut index = 0;
+
+        let mut k = i * trials;
+        println!("{}", &solutions[i * trials].0);
+        for j in 0.. trials as usize {
+            k = i * trials + j;
+            let sol = &solutions[k];
+        
+            match &sol.1 {
+                Ok(sol) => {
+                    count += 1;
+                    steps += sol.steps;
+                    if sol.steps < least_steps {
+                        least_steps = sol.steps;
+                        index = k;
+                    }
+                },
+                Err(message) => {
+                    println!("{}", message);
+                },
+            }
+        }
+        println!("Best Solution: ");
+        solutions[index].1.as_ref().unwrap().print();
+        let avg_steps = steps as f32 / count as f32;
+        println!("Average Steps: {}", avg_steps);
+    }
+
 }
 
 fn puzzles(dimension: Vector2) -> Vec<Puzzle> {
@@ -63,11 +112,15 @@ fn puzzles(dimension: Vector2) -> Vec<Puzzle> {
     for p in puzzle_raw {
         puzzle.push(Puzzle::from_vec(dimension, p));
     }
-    let mut random_puzzle = Puzzle::new(dimension);
-    while !random_puzzle.test_solvable() {
-        random_puzzle = Puzzle::new(dimension);
+
+    // Add random puzzles
+    for i in 0..5 {
+        let mut random_puzzle = Puzzle::new(dimension);
+        while !random_puzzle.test_solvable() {
+            random_puzzle = Puzzle::new(dimension);
+        }
+        puzzle.push(random_puzzle);
     }
-    puzzle.push(random_puzzle);
     
     puzzle
 }

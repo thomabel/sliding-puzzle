@@ -1,3 +1,4 @@
+#![allow(unused)]
 use std::cmp::Reverse;
 use priority_queue::PriorityQueue;
 use slab_tree::{NodeId, TreeBuilder};
